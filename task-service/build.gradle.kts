@@ -12,9 +12,6 @@ group = "com.example"
 version = "0.0.1-SNAPSHOT"
 description = "task-service"
 
-// Testcontainers >= 1.21.4 нужен для Docker Engine 29+ (старый клиент отвергается по версии API)
-extra["testcontainers.version"] = "1.21.4"
-
 val mapstructVersion = "1.6.3"
 
 java {

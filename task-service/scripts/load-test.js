@@ -1,9 +1,9 @@
 // Нагрузочный тест (NFT: до 10k пользователей, до 100k задач).
 //
-// Подготовка: загрузить данные scripts/seed-load-data.sql, затем
-//   k6 run scripts/load-test.js
+// Подготовка: загрузить данные task-service/scripts/seed-load-data.sql, затем
+//   k6 run task-service/scripts/load-test.js
 // либо без установки k6:
-//   docker run --rm -i --network <сеть compose> -e BASE_URL=http://app:8080 grafana/k6 run - < scripts/load-test.js
+//   docker run --rm -i --network <сеть compose> -e BASE_URL=http://task-service:8080 grafana/k6 run - < task-service/scripts/load-test.js
 //
 // Переменные: BASE_URL (по умолчанию http://localhost:8080), VUS (50), THINK_TIME в секундах (0.1).
 //

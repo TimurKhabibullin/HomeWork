@@ -1,0 +1,69 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+    <!--
+        БД общая с task-service. Оба сервиса используют стандартные таблицы DATABASECHANGELOG и DATABASECHANGELOGLOCK,
+        поэтому миграции при одновременном старте выполняются строго по очереди (по блокировке Liquibase).
+    -->
+
+    <changeSet id="23112026_1" author="t.khabibullin">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="users"/>
+            </not>
+        </preConditions>
+        <comment>Таблица пользователей общая с task-service: создаём, только если сервис стартовал раньше task-service (определение идентично)</comment>
+
+        <createTable tableName="users">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="varchar(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_users_email"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="23112026_2" author="t.khabibullin">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="credentials"/>
+            </not>
+        </preConditions>
+        <comment>Учётные данные для входа по логину и паролю (1:1 с users)</comment>
+
+        <createTable tableName="credentials">
+            <column name="user_id" type="bigint">
+                <constraints primaryKey="true" primaryKeyName="pk_credentials" nullable="false"
+                             foreignKeyName="fk_credentials_user_id" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="login" type="varchar(50)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_credentials_login"/>
+            </column>
+            <column name="password_hash" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="varchar(20)" defaultValue="USER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <sql>
+            alter table credentials
+                add constraint ck_credentials_role check (role in ('USER', 'ADMIN'))
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

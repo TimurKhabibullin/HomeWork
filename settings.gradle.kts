@@ -1,1 +1,3 @@
-rootProject.name = "task-service"
+rootProject.name = "homework"
+
+include("task-service", "auth-service")
