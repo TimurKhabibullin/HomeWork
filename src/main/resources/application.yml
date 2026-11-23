@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: task-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/tasks}
+    username: ${DB_USER:tasks}
+    password: ${DB_PASSWORD:tasks}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  liquibase:
+    change-log: 'classpath:liquibase/main-changelog.xml'
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        enable.idempotence: true
+        delivery.timeout.ms: 30000
+    consumer:
+      group-id: task-service-event-logger
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  data:
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 100
+
+app:
+  kafka:
+    topic: ${TASK_EVENTS_TOPIC:task-events}
+    partitions: 3
+    # демонстрационный consumer, логирует события; можно отключить
+    consumer:
+      enabled: ${KAFKA_CONSUMER_ENABLED:true}
+  # эндпоинты /api/v1/users нужны только для тестирования (онбординг вне рамок задания)
+  test-endpoints:
+    enabled: ${TEST_ENDPOINTS_ENABLED:true}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    operations-sorter: alpha
+    tags-sorter: alpha
+    path: /swagger-ui.html
+
+server:
+  port: ${SERVER_PORT:8080}

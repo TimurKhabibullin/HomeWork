@@ -1,0 +1,103 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+    <changeSet id="23112026_1" author="t.khabibullin">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="users"/>
+            </not>
+        </preConditions>
+        <comment>Создание таблицы пользователей</comment>
+
+        <createTable tableName="users">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="varchar(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_users_email"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="23112026_2" author="t.khabibullin">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="tasks"/>
+            </not>
+        </preConditions>
+        <comment>Создание таблицы задач</comment>
+
+        <createTable tableName="tasks">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="title" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="text"/>
+            <column name="status" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assignee_id" type="bigint">
+                <constraints foreignKeyName="fk_tasks_assignee_id" references="users(id)"/>
+            </column>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <sql>
+            alter table tasks
+                add constraint ck_tasks_status check (status in ('NEW', 'IN_PROGRESS', 'DONE'))
+        </sql>
+    </changeSet>
+
+    <changeSet id="23112026_3" author="t.khabibullin">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="tasks" indexName="idx_tasks_assignee_id"/>
+            </not>
+        </preConditions>
+        <comment>Индексы задач: по исполнителю (FK, фильтрация) и по статусу (фильтрация)</comment>
+
+        <createIndex tableName="tasks" indexName="idx_tasks_assignee_id">
+            <column name="assignee_id"/>
+        </createIndex>
+        <createIndex tableName="tasks" indexName="idx_tasks_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="23112026_4" author="t.khabibullin">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">select count(*) from users where email = 'alice@example.com'</sqlCheck>
+        </preConditions>
+        <comment>Тестовые пользователи (онбординг вне рамок задания)</comment>
+
+        <insert tableName="users">
+            <column name="name" value="Alice Ivanova"/>
+            <column name="email" value="alice@example.com"/>
+        </insert>
+        <insert tableName="users">
+            <column name="name" value="Bob Petrov"/>
+            <column name="email" value="bob@example.com"/>
+        </insert>
+        <insert tableName="users">
+            <column name="name" value="Carol Sidorova"/>
+            <column name="email" value="carol@example.com"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
